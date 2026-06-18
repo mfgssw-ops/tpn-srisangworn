@@ -1547,19 +1547,19 @@ function saveOneOrder(order){
 const LS_SETTINGS='tpn_settings_v1';
 const DEFAULT_SETTINGS=[
   {id:'glu50',  name:'50% Dextrose',           brand:'', pkgSize:500, unit:'ขวด'},
-  {id:'aa10',   name:'10% Amino Acid',          brand:'Aminovent', pkgSize:500, unit:'ขวด'},
+  {id:'aa10',   name:'10% Amino Acid',          brand:'Aminovent', pkgSize:100, unit:'ขวด'},
   {id:'k2hpo4', name:'K₂HPO₄ 0.5 mmol/mL',     brand:'', pkgSize:20,  unit:'vial'},
   {id:'kac',    name:'K Acetate 3 meq/mL',      brand:'', pkgSize:20,  unit:'vial'},
   {id:'kcl',    name:'KCl 2 meq/mL',            brand:'', pkgSize:20,  unit:'vial'},
   {id:'nacl176',name:'17.6% NaCl 3 meq/mL',     brand:'', pkgSize:20,  unit:'vial'},
-  {id:'nacl3',  name:'3% NaCl',                 brand:'', pkgSize:100, unit:'ขวด'},
+  {id:'nacl3',  name:'3% NaCl',                 brand:'', pkgSize:300, unit:'ขวด'},
   {id:'caglu',  name:'Calcium gluconate',        brand:'', pkgSize:10,  unit:'amp'},
   {id:'mgso4',  name:'MgSO₄ 10%',               brand:'', pkgSize:10,  unit:'amp'},
   {id:'trace',  name:'Ped. Trace Element',       brand:'', pkgSize:10,  unit:'vial'},
   {id:'zinc',   name:'Zinc Sulfate 500 mcg/mL',  brand:'', pkgSize:10,  unit:'vial'},
-  {id:'sol',    name:'Soluvit N',               brand:'', pkgSize:1,   unit:'vial'},
+  {id:'sol',    name:'Soluvit N',               brand:'', pkgSize:10,   unit:'vial'},
   {id:'stw',    name:'Sterile Water for Inj.',   brand:'', pkgSize:100, unit:'ขวด'},
-  {id:'lipid',  name:'20% Lipid Emulsion',       brand:'', pkgSize:500, unit:'ขวด'},
+  {id:'lipid',  name:'20% Lipid Emulsion',       brand:'', pkgSize:100, unit:'ขวด'},
 ];
 function loadSettings(){ try{return JSON.parse(localStorage.getItem(LS_SETTINGS))||DEFAULT_SETTINGS}catch(e){return DEFAULT_SETTINGS} }
 function getPkgSize(id){ return loadSettings().find(x=>x.id===id)?.pkgSize||1 }
@@ -2030,7 +2030,7 @@ function checkCutoffOnSubmit(){
       const ok=confirm(
         `⚠️ ขณะนี้เกินเวลาตัดยา 13:00 น. แล้ว\n\n`+
         `Order วันนี้อาจไม่ทันเตรียม — ต้องการเปลี่ยนวันที่ PN เป็นพรุ่งนี้หรือไม่?\n\n`+
-        `กด OK = เปลี่ยนเป็นพรุ่งนี้\nกด Cancel = ส่งวันนี้ต่อไป (แพทย์รับผิดชอบเอง)`
+        `กด OK = เปลี่ยนเป็นพรุ่งนี้\nกด Cancel = ส่งวันนี้ต่อไป (รบกวนเตรียมเองที่หอผู้ป่วย)`
       );
       if(ok){
         const tom=new Date(); tom.setDate(tom.getDate()+1);
