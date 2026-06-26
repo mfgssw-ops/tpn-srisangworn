@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', initFB);
       </div></div>
         <div id="holiday-alert" style="display: flex; margin-top: 10px;" class="alert alert-warn">⚠️ <div>PN วันนี้ตรงกับ<strong>วันเสาร์</strong> — เภสัชกรจะเตรียมล่วงหน้า<br>
       <strong>วันที่ต้องการ: 27 มิถุนายน 2569</strong> (1 วัน)<br>
-      <span style="font-size:12px;opacity:.8">💡 ระบุ order ให้ครบทุกวัน — เภสัชกรจะกำหนดวันเตรียมเอง</span></div></div>
+      <span style="font-size:12px;opacity:.8">💡 ระบุ order ให้ครบทุกวัน — เภสัชกรจะเตรียมให้ในวันทำการ </span></div></div>
         <!-- Multi-day tabs -->
         <div id="day-tabs-wrap" style="display:none;margin-top:14px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
@@ -669,11 +669,11 @@ document.addEventListener('DOMContentLoaded', initFB);
             <tr><td><strong>Dextrose</strong></td>
               <td style="font-size:11.5px;color:var(--tx3)">%</td>
               <td style="font-size:11.5px;color:var(--tx3)">Glucose 10-25 / 10-25 g/kg/day</td>
-              <td><input type="number" id="f-glcp" step="0.5" min="5" max="35" placeholder="เช่น 10" oninput="runValidation();autoDraft();this.style.borderColor=this.value?&#39;&#39;:&#39;var(--rd)&#39;" style="border:1.5px solid var(--b2)" onfocus="this.style.borderColor=&#39;&#39;" onblur="if(!this.value)this.style.borderColor=&#39;var(--rd)&#39;"> <span style="color:var(--rd);font-size:11px">* จำเป็น</span></td></tr>
+              <td><input type="number" id="f-glcp" step="0.5" min="5" max="35" placeholder="0" oninput="runValidation();autoDraft();this.style.borderColor=this.value?&#39;&#39;:&#39;var(--rd)&#39;" style="border:1.5px solid var(--b2)" onfocus="this.style.borderColor=&#39;&#39;" onblur="if(!this.value)this.style.borderColor=&#39;var(--rd)&#39;"> <span style="color:var(--rd);font-size:11px">* จำเป็น</span></td></tr>
             <tr><td><strong>Amino Acid</strong></td>
               <td><span class="unit-toggle" id="ut-aa" onclick="toggleUnit(&#39;aa&#39;)" title="คลิกเพื่อสลับหน่วย">g/<strong>kg</strong>/day</span></td>
               <td style="font-size:11.5px;color:var(--tx3)">0.5-3 / 1-2.5 g/kg/day</td>
-              <td><input type="number" id="f-aa" step="0.1" min="0" max="30" placeholder="1.5" oninput="runValidation();autoDraft()"> <span class="req">*</span></td></tr>
+              <td><input type="number" id="f-aa" step="0.1" min="0" max="30" placeholder="0" oninput="runValidation();autoDraft()"> <span class="req">*</span></td></tr>
           </tbody>
         </table>
         <div class="sdiv">Electrolytes &nbsp;<span style="font-size:11px;color:var(--tx3);font-weight:400">คลิกที่หน่วยเพื่อสลับ /kg/day ↔ /day</span></div>
