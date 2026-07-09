@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', initFB);
     <div class="rs-card" onclick="selectRole(&#39;doctor&#39;)">
       <div class="rs-card-icon">👨‍⚕️</div>
       <div class="rs-card-title">แพทย์ / Doctor</div>
-      <div class="rs-card-desc">สั่ง TPN Order<br>กรอกสูตรและส่งให้เภสัช</div>
+      <div class="rs-card-desc">สั่ง PN Order<br>กรอกสูตรและส่งให้เภสัช</div>
     </div>
     <div class="rs-card" onclick="selectRole(&#39;pharmacist&#39;)">
       <div class="rs-card-icon">💊</div>
@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', initFB);
     <div class="rs-card" onclick="selectRole(&#39;ward&#39;)">
       <div class="rs-card-icon">🏥</div>
       <div class="rs-card-title">Ward / พยาบาล</div>
-      <div class="rs-card-desc">ดูส่วนประกอบ TPN<br>ตรวจสอบความปลอดภัย</div>
+      <div class="rs-card-desc">ดูส่วนประกอบ PN<br>ตรวจสอบความปลอดภัย</div>
     </div>
   </div>
   <div class="rs-date" id="rs-date">6 กรกฎาคม 2569</div>
@@ -1545,7 +1545,7 @@ async function notifyTelegram(order){
     const dex = day0.glcPct || order.glcPct || '—';
     const lipid = (day0.lipid>0||order.lipid>0) ? `\n🫙 Lipid: ${dispDose(order,day0,'lipid','g')}` : '';
     const msg =
-      `💊 *TPN Order ใหม่*\n`+
+      `💊 *PN Order ใหม่*\n`+
       `───────────────\n`+
       `👤 ผู้ป่วย: ${order.name||'—'}\n`+
       `🏥 Ward: ${order.ward||'—'}  เตียง: ${order.bed||'—'}\n`+
@@ -2108,7 +2108,7 @@ function fbToggleUnit(){
   if(el){ el.innerHTML = fbUnit==='kgday'?'mL/<strong>kg</strong>/day':'mL/<strong>day</strong>'; el.classList.toggle('per-day', fbUnit==='day'); }
   calcFluidBalance();
 }
-// คำนวณ "คงเหลือสำหรับ TPN+Lipid+Vitalipid" = fluid รวม - นม - สารน้ำ/ยาอื่น
+// คำนวณ "คงเหลือสำหรับ PN+Lipid+Vitalipid" = fluid รวม - นม - สารน้ำ/ยาอื่น
 // applyToVold=true → auto-fill ลงช่อง Vol. PN/day (โหมด 2in1) ทันที ยังแก้ไขเองได้ภายหลัง
 function calcFluidBalance(applyToVold=true){
   const bw=num('pt-bw'), totalRaw=num('fb-total'), milk=num('fb-milk'), other=num('fb-other');
