@@ -778,7 +778,7 @@ document.addEventListener('DOMContentLoaded', initFB);
               <td style="font-size:11.5px;color:var(--tx3)">Ca gluconate</td></tr>
             <tr><td><strong>Magnesium</strong></td>
               <td><span class="unit-toggle" id="ut-mg" onclick="toggleUnit(&#39;mg&#39;)" title="คลิกสลับ">meq/<strong>kg</strong>/day</span></td>
-              <td style="font-size:11.5px;color:var(--tx3)">0.5-1 / 0.5</td>
+              <td style="font-size:11.5px;color:var(--tx3)">0.3-0.5 / 0.5</td>
               <td><input type="number" id="f-mg" step="0.1" min="0" placeholder="0" oninput="runValidation();autoDraft()"></td>
               <td><span class="src-chip on" id="smg-10" onclick="setSrc(&#39;mg&#39;,&#39;mgso4_10&#39;,this)">MgSO₄ 10%</span><span class="src-chip" id="smg-50" onclick="setSrc(&#39;mg&#39;,&#39;mgso4_50&#39;,this)">MgSO₄ 50%</span></td></tr>
           </tbody>
@@ -6017,8 +6017,8 @@ function showDrugInfo(){
         ${drRow('Potassium','2–3','2–3','mEq/kg/day')}
         ${drRow('Sodium','2–4','2–4','mEq/kg/day')}
         ${drRow('Chloride','2–3','2–3','mEq/kg/day')}
-        ${drRow('Magnesium','0.5–1','0.5','mEq/kg/day')}
-        ${drRow('Calcium','1–1.5','0.5–1','mEq/kg/day')}
+        ${drRow('Magnesium','0.3–0.5','0.3-0.5','mEq/kg/day')}
+        ${drRow('Calcium','2-3','1-2','mEq/kg/day')}
         ${drRow('Trace element','1 mL/kg/day','1 mL/kg/day','max 10 mL/day')}
         ${drRow('Soluvit N','1 mL/kg/day','1 mL/kg/day','max 10 mL/day — Water-soluble vitamins')}
         ${drRow('Vitalipid N','4 mL/kg/day','4 mL/kg/day','max 10 mL/day — Fat-soluble vitamins ผสมใน Lipid')}
