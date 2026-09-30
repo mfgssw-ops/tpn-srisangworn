@@ -744,7 +744,7 @@ document.addEventListener('DOMContentLoaded', initFB);
               <td><input type="number" id="f-glcp" step="0.5" min="5" max="35" placeholder="เช่น 10" oninput="runValidation();autoDraft();this.style.borderColor=this.value?'':'var(--rd)'" style="border:1.5px solid var(--b2)" onfocus="this.style.borderColor=''" onblur="if(!this.value)this.style.borderColor='var(--rd)'"> <span style="color:var(--rd);font-size:13px">* จำเป็น</span></td></tr>
             <tr><td><strong>Amino Acid</strong></td>
               <td><span class="unit-toggle" id="ut-aa" onclick="toggleUnit('aa')" title="คลิกเพื่อสลับหน่วย">g/<strong>kg</strong>/day</span></td>
-              <td style="font-size:14px;color:var(--tx3)">0.5-3 / 1-2.5 g/kg/day</td>
+              <td style="font-size:14px;color:var(--tx3)">2.5-3.5 / 1.5-3 g/kg/day</td>
               <td><input type="number" id="f-aa" step="0.1" min="0" max="30" placeholder="0" oninput="runValidation();autoDraft()"> <span class="req">*</span></td></tr>
           </tbody>
         </table>
@@ -761,32 +761,32 @@ document.addEventListener('DOMContentLoaded', initFB);
           <tbody>
             <tr><td><strong>Phosphate</strong></td>
               <td><span class="unit-toggle" id="ut-po4" onclick="toggleUnit('po4')" title="คลิกสลับ">mmol/<strong>kg</strong>/day</span></td>
-              <td style="font-size:14px;color:var(--tx3)">1-1.5 / 0.6-1.3</td>
+              <td style="font-size:14px;color:var(--tx3)">1.6-3.5 / 0.6-1.3</td>
               <td><input type="number" id="f-po4" step="0.1" min="0" placeholder="0" oninput="updatePo4Chip();runValidation();autoDraft()"></td>
               <td><span class="src-chip on" id="spo4-k2hpo4" style="opacity:.45" onclick="setSrc('po4','k2hpo4',this)">K₂HPO₄</span><span class="src-chip" id="spo4-glyco" style="opacity:.45" onclick="setSrc('po4','glycophos',this)">Glycophos</span></td></tr>
             <tr><td><strong>Potassium</strong></td>
               <td><span class="unit-toggle" id="ut-k" onclick="toggleUnit('k')" title="คลิกสลับ">meq/<strong>kg</strong>/day</span></td>
-              <td style="font-size:14px;color:var(--tx3)">2-3 / 2-3</td>
+              <td style="font-size:14px;color:var(--tx3)">1-5 / 1.5-3</td>
               <td><input type="number" id="f-k" step="0.5" min="0" placeholder="0" oninput="runValidation();autoDraft()"></td>
               <td><span class="src-chip on" id="sk-kac" onclick="setSrc('k','kac',this)">K Acetate</span><span class="src-chip" id="sk-kcl" onclick="setSrc('k','kcl',this)">KCl</span></td></tr>
             <tr><td><strong>Sodium</strong></td>
               <td><span class="unit-toggle" id="ut-na" onclick="toggleUnit('na')" title="คลิกสลับ">meq/<strong>kg</strong>/day</span></td>
-              <td style="font-size:14px;color:var(--tx3)">2-4 / 2-4</td>
+              <td style="font-size:14px;color:var(--tx3)">3-5 / 2-3</td>
               <td><input type="number" id="f-na" step="0.5" min="0" placeholder="0" oninput="runValidation();autoDraft()"></td>
               <td><span class="src-chip on" id="sna-176" onclick="setSrc('na','176',this)">17.6% NaCl</span><span class="src-chip" id="sna-3" onclick="setSrc('na','3',this)">3% NaCl</span><span class="src-chip" id="sna-acetate" onclick="setSrc('na','acetate',this)">Na Acetate 40.8%</span></td></tr>
             <tr><td><strong>Chloride</strong></td>
               <td><span class="unit-toggle" id="ut-cl" onclick="toggleUnit('cl')" title="คลิกสลับ">meq/<strong>kg</strong>/day</span></td>
-              <td style="font-size:14px;color:var(--tx3)">2-3 / 2-3</td>
+              <td style="font-size:14px;color:var(--tx3)">3-5 / 2-3</td>
               <td><input type="number" id="f-cl" step="0.5" min="0" placeholder="0" oninput="runValidation();autoDraft()"></td>
               <td style="font-size:14px;color:var(--tx3)">จาก NaCl, KCl</td></tr>
             <tr><td><strong>Calcium</strong></td>
               <td><span class="unit-toggle" id="ut-ca" onclick="toggleUnit('ca')" title="คลิกสลับ">meq/<strong>kg</strong>/day</span></td>
-              <td style="font-size:14px;color:var(--tx3)">1-1.5 / 0.5-1</td>
+              <td style="font-size:14px;color:var(--tx3)">3.2-7 / 1.6-3</td>
               <td><input type="number" id="f-ca" step="0.5" min="0" placeholder="0" oninput="runValidation();autoDraft()"></td>
               <td style="font-size:14px;color:var(--tx3)">Ca gluconate</td></tr>
             <tr><td><strong>Magnesium</strong></td>
               <td><span class="unit-toggle" id="ut-mg" onclick="toggleUnit('mg')" title="คลิกสลับ">meq/<strong>kg</strong>/day</span></td>
-              <td style="font-size:14px;color:var(--tx3)">0.5-1 / 0.5</td>
+              <td style="font-size:14px;color:var(--tx3)">0.4-0.6 / 0.2-0.4</td>
               <td><input type="number" id="f-mg" step="0.1" min="0" placeholder="0" oninput="runValidation();autoDraft()"></td>
               <td><span class="src-chip on" id="smg-10" onclick="setSrc('mg','mgso4_10',this)">MgSO₄ 10%</span><span class="src-chip" id="smg-50" onclick="setSrc('mg','mgso4_50',this)">MgSO₄ 50%</span></td></tr>
           </tbody>
