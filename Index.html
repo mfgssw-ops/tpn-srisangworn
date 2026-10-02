@@ -785,7 +785,7 @@ document.addEventListener('DOMContentLoaded', initFB);
               <td style="font-size:14px;color:var(--tx3)">จาก NaCl, KCl</td></tr>
             <tr><td><strong>Calcium</strong></td>
               <td><span class="unit-toggle" id="ut-ca" onclick="toggleUnit('ca')" title="คลิกสลับ">meq/<strong>kg</strong>/day</span></td>
-              <td style="font-size:14px;color:var(--tx3)">1–1.5 / 0.5–1 <span style="color:var(--am)">(เกณฑ์เดิม — รอพิจารณา)</span></td>
+              <td style="font-size:14px;color:var(--tx3)">1.6–3.5 / 0.8–1.6 <span style="color:var(--am)"></td>
               <td><input type="number" id="f-ca" step="0.5" min="0" placeholder="0" oninput="runValidation();autoDraft()"></td>
               <td style="font-size:14px;color:var(--tx3)">Ca gluconate</td></tr>
             <tr><td><strong>Magnesium</strong></td>
@@ -2970,7 +2970,7 @@ const REF_DATA = [
   {name:'Chloride',          unit:'mEq/kg/day', preterm:'3-5',                       term:'2-3',                     field:'f-cl'},
   {name:'Trace element (Pedritrace®)', unit:'mL/kg/day', preterm:'1',                term:'1',                       field:'f-trace'},
   {name:'Magnesium',         unit:'mEq/kg/day', preterm:'0.4-0.6',                   term:'0.2-0.4',                 field:'f-mg'},
-  {name:'Calcium',           unit:'mEq/kg/day', preterm:'1-1.5',                     term:'0.5-1',                   field:'f-ca', note:'เกณฑ์เดิมของระบบ — ESPGHAN 2018 แนะนำ 3.2–7 / 1.6–3 mEq/kg/day รอพิจารณาร่วมกับทีมกุมารแพทย์'},
+  {name:'Calcium',           unit:'mEq/kg/day', preterm:'1.6-3.5',                   term:'0.8-1.5',                 field:'f-ca'},
   {name:'Soluvit N',         unit:'mL/kg/day', preterm:'1 (max 10 mL/day)',          term:'1 (max 10 mL/day)',       field:'f-sol-kg'},
   {name:'Vitalipid N',       unit:'mL/kg/day', preterm:'4 (max 10 mL/day)',          term:'4 (max 10 mL/day)',       field:'f-vital-kg'},
   {name:'20% Lipid',         unit:'g/kg/day',  preterm:'Initial 0.5-1 · เป้าหมาย 2-4', term:'Initial 0.5-1 · เป้าหมาย 2-4', field:'lip-gkgd'},
