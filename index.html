@@ -2549,7 +2549,7 @@ const REF_DATA = [
   {name:'Chloride',          unit:'mEq/kg/day', preterm:'3-5',                       term:'2-3',                     field:'f-cl'},
   {name:'Trace element (Pedritrace®)', unit:'mL/kg/day', preterm:'1',                term:'1',                       field:'f-trace'},
   {name:'Magnesium',         unit:'mEq/kg/day', preterm:'0.4-0.6',                   term:'0.2-0.4',                 field:'f-mg'},
-  {name:'Calcium',           unit:'mEq/kg/day', preterm:'1-1.5',                     term:'0.5-1',                   field:'f-ca', note:'เกณฑ์เดิมของระบบ — ESPGHAN 2018 แนะนำ 3.2–7 / 1.6–3 mEq/kg/day รอพิจารณาร่วมกับทีมกุมารแพทย์'},
+  {name:'Calcium',           unit:'mEq/kg/day', preterm:'1.6-3.5',                   term:'0.8-1.5',                 field:'f-ca'},
   {name:'Soluvit N',         unit:'mL/kg/day', preterm:'1 (max 10 mL/day)',          term:'1 (max 10 mL/day)',       field:'f-sol-kg'},
   {name:'Vitalipid N',       unit:'mL/kg/day', preterm:'4 (max 10 mL/day)',          term:'4 (max 10 mL/day)',       field:'f-vital-kg'},
   {name:'20% Lipid',         unit:'g/kg/day',  preterm:'Initial 0.5-1 · เป้าหมาย 2-4', term:'Initial 0.5-1 · เป้าหมาย 2-4', field:'lip-gkgd'},
@@ -5916,7 +5916,7 @@ function showDrugInfo(){
         ${drRow('Na','3–5','2–3','mEq/kg/day')}
         ${drRow('K','1–5<br><span style="font-size:12.5px">ขึ้นกับ BW/phase</span>','1.5–3','mEq/kg/day')}
         ${drRow('Cl','3–5','2–3','mEq/kg/day')}
-        ${drRow('Ca','1.6–3.5 mmol<br><span style="font-size:12.5px;font-style:italic">(3.2–7 mEq)</span>','0.8–1.5 mmol<br><span style="font-size:12.5px;font-style:italic">(1.6–3 mEq)</span>','/kg/day — ระบบสั่ง Ca เป็น mEq<br><span style="color:#b45309">⚠ ระบบยังใช้เกณฑ์เดิม 1–1.5 / 0.5–1 mEq/kg/day รอพิจารณาร่วมกับทีมกุมารแพทย์</span>')}
+        ${drRow('Ca','1.6–3.5 mmol<br><span style="font-size:12.5px;font-style:italic">(3.2–7 mEq)</span>','0.8–1.5 mmol<br><span style="font-size:12.5px;font-style:italic">(1.6–3 mEq)</span>','/kg/day — ระบบสั่ง Ca เป็น mEq<br><span style="color:#b45309">}
         ${drRow('P','1.6–3.5','0.7–1.3','mmol/kg/day')}
         ${drRow('Mg','0.2–0.3 mmol<br><span style="font-size:12.5px;font-style:italic">(0.4–0.6 mEq)</span>','0.1–0.2 mmol<br><span style="font-size:12.5px;font-style:italic">(0.2–0.4 mEq)</span>','/kg/day — ระบบสั่ง Mg เป็น mEq')}
       </tbody>
@@ -6445,7 +6445,7 @@ function recTableHtml(c,o,day){
   const stwCell=c.stw<0?`<span style="color:red;font-weight:700">-${fmt(Math.abs(c.stw),2)}</span>`:c.stw===0?'-':fmt(c.stw,2);
   return `<table class="prec-tbl">
     <colgroup><col style="width:27%"><col style="width:16%"><col style="width:13%"><col style="width:13%"><col style="width:12%"><col style="width:19%"></colgroup>
-    <thead><tr><th>สารเคมี</th><th>Doctor order</th><th>ปริมาณ (แพทย์สั่ง)<br><span style="font-weight:400;font-size:.85em">ต่อ Vol. PN/day ${fmt(day.volD,1)} mL</span></th><th>ปริมาณ (เตรียม)<br><span style="font-weight:400;font-size:.85em">ต่อขวด ${day.volP} mL</span></th><th>ปริมาตร (mL)</th><th>Lot No.</th></tr></thead>
+    <thead><tr><th>สารเคมี</th><th>Doctor order</th><th>ปริมาณ (แพทย์)<br><span style="font-weight:400;font-size:.85em">ต่อ Vol. PN/day ${fmt(day.volD,1)} mL</span></th><th>ปริมาณ (เตรียม)<br><span style="font-weight:400;font-size:.85em">ต่อขวด ${day.volP} mL</span></th><th>ปริมาตร (mL)</th><th>Lot No.</th></tr></thead>
     <tbody>
       ${row('Dextrose 50%',(day.glcPct||0)+'%',fmt(c.glcGB/r,2)+' g',fmt(c.glcGB,2)+' g',fmt(c.glcVol,2))}
       ${row('Amino Acid 10%',dispDose(o,day,'aa','g'),fmt(c.aaGB/r,2)+' g',fmt(c.aaGB,2)+' g',fmt(c.aaVol,2))}
