@@ -429,8 +429,8 @@ async function initFB(){
     // real-time listener — อัปเดตทุกครั้งที่มีการเปลี่ยนแปลง
     onValue(ref(db, 'orders'), s => {
       _ordersCache = s.exists() ? Object.values(s.val()) : [];
-      if(window.currentRole === 'pharmacist') window.renderPhQueue && window.renderPhQueue();
-      if(window.currentRole === 'doctor') window.renderDocDrafts && window.renderDocDrafts();
+      // แจ้งสคริปต์หลักให้รีเฟรชหน้าจอ (เดิมเช็ค window.currentRole ซึ่งเป็น undefined เสมอ เพราะประกาศด้วย let → ไม่เคย refresh)
+      if(window.onOrdersChanged) window.onOrdersChanged();
       const p = _ordersCache.filter(o=>o.status==='submitted').length;
       const rs2 = document.getElementById('rs-orders-status');
       if(rs2 && p > 0) rs2.innerHTML = `💊 มี <strong style="color:#fbbf24">${p} Orders</strong> รอเภสัชกรดำเนินการ`;
@@ -1781,7 +1781,8 @@ function saveOneOrder(order){
   if(idx>=0) list[idx]=order; else list.push(order);
   if(window._setOrdersCache) window._setOrdersCache(list);
   try{localStorage.setItem(LS,JSON.stringify(list))}catch(e){}
-  if(window._fbSaveOrder) window._fbSaveOrder(order).catch(console.error);
+  if(window._fbSaveOrder) return window._fbSaveOrder(order).catch(console.error);
+  return Promise.resolve();
 }
 
 // ════ SETTINGS ════
@@ -2052,7 +2053,7 @@ function fmtDurationTo(dt){
 }
 
 // ════ ROLE / NAV ════
-let currentRole=null;
+var currentRole=null; // var → มองเห็นเป็น window.currentRole ด้วย (สคริปต์ Firebase module ใช้)
 // ════ WARD VIEW ════
 function renderWardView(){
   const el=$('ward-list'); if(!el) return;
@@ -2232,14 +2233,8 @@ function selectRole(role){
     const hd=$('hist-date'); if(hd) hd.value=today();
     setWfRoundToday(false);
     showTab('ph','queue');
-    // โหลด orders โดยตรง รอ DOM พร้อมก่อน
-    const _list=loadOrders();
-    _list.forEach(o=>{
-      if(o.status!=='done'&&o.status!=='submitted'&&o.status!=='confirmed') o.status='submitted';
-    });
-    phOrders=_list
-      .filter(o=>(o.status==='submitted'||o.status==='confirmed')&&o.status!=='rejected')
-      .map(o=>({...o, pnid:o.pnid||'', prepDate:o.prepDate||today()}));
+    // โหลด orders (ไม่แก้ status ของ draft/rejected — เดิมแปลงเป็น submitted ทำให้ Order ที่ปฏิเสธแล้ว/Draft โผล่ในคิว)
+    phOrders=buildPhOrders();
     // รอ 200ms ให้ DOM แน่ใจว่า pg-ph-queue.active แล้ว
     setTimeout(()=>{
       renderPhQueue();
@@ -2364,12 +2359,7 @@ function showTab(role,tab){
   if(tabEl){ const ac=role==='doc'?'active-doc':role==='ph'?'active-ph':'active-ward'; tabEl.classList.add(ac); }
   if(role==='ph'&&tab==='wf'){
     // โหลด confirmed orders จาก phOrders หรือ localStorage
-    if(!phOrders.length){
-      const list=loadOrders();
-      phOrders=list
-        .filter(o=>(o.status==='submitted'||o.status==='confirmed')&&o.status!=='rejected')
-        .map(o=>({...o,pnid:o.pnid||'',prepDate:o.prepDate||today()}));
-    }
+    if(!phOrders.length) phOrders=buildPhOrders();
     renderWF();
   }
   if(role==='ph'&&tab==='settings'){ renderSettings(); renderSrcToggles(); renderHolidaySettings(); }
@@ -2549,7 +2539,7 @@ const REF_DATA = [
   {name:'Chloride',          unit:'mEq/kg/day', preterm:'3-5',                       term:'2-3',                     field:'f-cl'},
   {name:'Trace element (Pedritrace®)', unit:'mL/kg/day', preterm:'1',                term:'1',                       field:'f-trace'},
   {name:'Magnesium',         unit:'mEq/kg/day', preterm:'0.4-0.6',                   term:'0.2-0.4',                 field:'f-mg'},
-  {name:'Calcium',           unit:'mEq/kg/day', preterm:'1.6-3.5',                   term:'0.8-1.5',                 field:'f-ca'},
+  {name:'Calcium',           unit:'mEq/kg/day', preterm:'1-1.5',                     term:'0.5-1',                   field:'f-ca', note:'เกณฑ์เดิมของระบบ — ESPGHAN 2018 แนะนำ 3.2–7 / 1.6–3 mEq/kg/day รอพิจารณาร่วมกับทีมกุมารแพทย์'},
   {name:'Soluvit N',         unit:'mL/kg/day', preterm:'1 (max 10 mL/day)',          term:'1 (max 10 mL/day)',       field:'f-sol-kg'},
   {name:'Vitalipid N',       unit:'mL/kg/day', preterm:'4 (max 10 mL/day)',          term:'4 (max 10 mL/day)',       field:'f-vital-kg'},
   {name:'20% Lipid',         unit:'g/kg/day',  preterm:'Initial 0.5-1 · เป้าหมาย 2-4', term:'Initial 0.5-1 · เป้าหมาย 2-4', field:'lip-gkgd'},
@@ -3662,6 +3652,7 @@ function renderDocDrafts(){
     .sort((a,b)=>b.savedAt.localeCompare(a.savedAt));
   const el=$('doc-orders-list'); if(!el)return;
   if(!orders.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3)">ยังไม่มี Order วันนี้</div>';return;}
+  const _open=openCardIds(el);
   el.innerHTML=orders.map((o,i)=>{
     const d0=o.days?.[0]||{};
     const c=calcTPN({...o,...d0});
@@ -3670,14 +3661,14 @@ function renderDocDrafts(){
       :o.status==='rejected'?'<span class="badge brd">✘ เภสัชปฏิเสธ</span>'
       :'<span class="badge bam">📝 Draft — ยังไม่ได้ส่ง!</span>';
     return `<div class="order-card" style="${o.status==='rejected'?'border-left:3px solid var(--rd)':o.status==='draft'?'border-left:3px solid var(--am)':''}">
-      <div class="oc-hdr" onclick="toggleOC('do-${i}',this)">
+      <div class="oc-hdr" onclick="toggleOC('do-${o._sid}',this)">
         ${statusBadge}
         <span style="font-weight:600;font-size:17px;margin-left:6px">${o.name}</span>
         <span style="font-size:14.5px;color:var(--tx3);margin-left:8px">${o.ward} ${o.bed||''} · BW ${o.bw} kg · ${o.ndays} วัน</span>
         <span style="font-size:14.5px;color:var(--tx3);margin-left:auto">${fmtShort(o.wantDate)}</span>
         <span style="color:var(--tx3);margin-left:6px">›</span>
       </div>
-      <div class="oc-body" id="do-${i}">
+      <div class="oc-body" id="do-${o._sid}">
         <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:14.5px;color:var(--tx2);margin-bottom:8px">
           <span>บันทึก: ${new Date(o.savedAt).toLocaleTimeString('th-TH')}</span>
           <span>Osm ≈ ${fmt(c.osm,0)} mosm/L</span>
@@ -3695,11 +3686,12 @@ function renderDocDrafts(){
       </div>
     </div>`;
   }).join('');
+  reopenCards(_open);
 }
 function submitExisting(sid){
   const list=loadOrders(), idx=list.findIndex(o=>o._sid===sid); if(idx<0)return;
   list[idx].status='submitted'; list[idx].submittedAt=new Date().toISOString();
-  saveOrders(list); renderDocDrafts(); alert('✔ ส่ง Order เรียบร้อย');
+  saveOneOrder(list[idx]); renderDocDrafts(); alert('✔ ส่ง Order เรียบร้อย');
 }
 
 // ════ แพทย์แก้ไข Order เดิม ════
@@ -3714,7 +3706,7 @@ function editOrderDoc(sid){
 
   // เปลี่ยน status เป็น draft ก่อน
   const idx=list.findIndex(x=>x._sid===sid);
-  if(idx>=0){ list[idx].status='draft'; saveOrders(list); if(window._fbSaveOrder) window._fbSaveOrder(list[idx]).catch(console.error); }
+  if(idx>=0){ list[idx].status='draft'; saveOneOrder(list[idx]); }
 
   showTab('doc','order');
   setTimeout(()=>{
@@ -3997,15 +3989,7 @@ let phOrders=[];
 
 function loadPhQueue(){
   // โหลดใหม่จาก localStorage ทุกครั้ง
-  const list=loadOrders();
-  list.forEach(o=>{
-    if(o.status!=='done'&&o.status!=='submitted'&&o.status!=='confirmed'&&o.status!=='rejected'){
-      o.status='submitted';
-    }
-  });
-  phOrders=list
-    .filter(o=>(o.status==='submitted'||o.status==='confirmed')&&o.status!=='rejected')
-    .map(o=>({...o, pnid:o.pnid||'', prepDate:o.prepDate||$('ph-prep-date')?.value||today()}));
+  phOrders=buildPhOrders();
 
   if(currentRole!=='pharmacist'){
     selectRole('pharmacist');
@@ -4115,7 +4099,8 @@ function pullDrafts(){
   drafts.forEach(d=>{
     if(!existing.has(d._sid)){
       phOrders.push({...d, pnid:'', prepDate:$('ph-prep-date')?.value||today(),
-        status:'submitted' // ให้ draft ที่เภสัชดึงมาถือเป็น submitted
+        status:'submitted', // ให้ draft ที่เภสัชดึงมาถือเป็น submitted
+        _pulledDraft:true   // จำไว้ เพื่อไม่ให้หายไปตอน sync real-time
       });
       added++;
     }
@@ -4151,16 +4136,15 @@ async function phSwitchSrc(sid, dayIdx, ion, newVal){
     note:`เปลี่ยน source ${ion==='k'?'Potassium':ion==='na'?'Sodium':ion==='po4'?'Phosphate':'Magnesium'} วันที่ ${dayIdx+1}`
   });
 
-  saveOrders(list);
-  if(window._fbSaveOrder) await window._fbSaveOrder(o).catch(console.error);
+  await saveOneOrder(o);
   const phIdx=phOrders.findIndex(x=>x._sid===sid);
-  if(phIdx>=0) phOrders[phIdx]={...o};
+  if(phIdx>=0) phOrders[phIdx]={...phOrders[phIdx],...o};
   renderPhQueue();
 }
 
 function savePnid(sid,val){
   const list=loadOrders(), idx=list.findIndex(o=>o._sid===sid);
-  if(idx>=0){list[idx].pnid=val; saveOrders(list);}
+  if(idx>=0){list[idx].pnid=val; saveOneOrder(list[idx]);}
   const po=phOrders.find(o=>o._sid===sid); if(po) po.pnid=val;
 }
 
@@ -4169,7 +4153,7 @@ function confirmOrder(sid){
   if(idx>=0){
     list[idx].status='confirmed';
     list[idx].confirmedAt=new Date().toISOString();
-    saveOrders(list);
+    saveOneOrder(list[idx]);
   }
   const po=phOrders.find(o=>o._sid===sid);
   if(po){po.status='confirmed'; po.confirmedAt=new Date().toISOString();}
@@ -4194,6 +4178,52 @@ function rejectOrder(sid){
   phOrders=phOrders.filter(o=>o._sid!==sid);
   renderPhQueue();
   alert(`ปฏิเสธ Order แล้ว${reason?'\nเหตุผล: '+reason:''}\nแพทย์จะต้องส่ง Order ใหม่`);
+}
+
+// ════ คิวเภสัชกร: สร้างจากข้อมูลล่าสุด (ไม่แก้ object ใน cache) ════
+const ORDER_STATUSES=['draft','submitted','confirmed','done','rejected'];
+function buildPhOrders(){
+  const prev=new Map(phOrders.map(o=>[o._sid,o]));
+  const defDate=$('ph-prep-date')?.value||today();
+  const all=loadOrders();
+  const out=all
+    // order เก่าที่ไม่มี status/ status ไม่รู้จัก → แสดงเป็น submitted (เฉพาะในหน้าจอ ไม่เขียนกลับ)
+    .map(o=>({...o, status:ORDER_STATUSES.includes(o.status)?o.status:'submitted'}))
+    .filter(o=>o.status==='submitted'||o.status==='confirmed')
+    .map(o=>({...o, pnid:o.pnid||'', prepDate:o.prepDate||prev.get(o._sid)?.prepDate||defDate}));
+  // Draft ที่เภสัชกด "ดึง Draft" มาเอง — คงไว้ตราบที่ยังเป็น draft อยู่
+  const have=new Set(out.map(o=>o._sid));
+  const store=new Map(all.map(o=>[o._sid,o]));
+  prev.forEach(p=>{
+    const cur=store.get(p._sid);
+    if(p._pulledDraft&&!have.has(p._sid)&&cur&&cur.status==='draft')
+      out.push({...cur, pnid:p.pnid||'', prepDate:p.prepDate||defDate, status:'submitted', _pulledDraft:true});
+  });
+  return out;
+}
+
+// ════ REAL-TIME SYNC (เรียกจาก Firebase onValue) ════
+let _syncTimer=null;
+function onOrdersChanged(){
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(applyOrdersChange,250); // รวมหลาย event ที่มาติดๆ กัน
+}
+function isTypingIn(container){
+  const a=document.activeElement;
+  return !!(a&&container&&container.contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+}
+function applyOrdersChange(){
+  if(currentRole==='pharmacist'){
+    phOrders=buildPhOrders();
+    const pg=$('pg-ph-queue');
+    if(pg?.classList.contains('active')){
+      // กำลังพิมพ์เลขที่ผลิตอยู่ → รอให้พิมพ์เสร็จก่อนค่อยวาดใหม่ (ไม่ให้ช่องหลุด focus)
+      if(isTypingIn(pg)){ _syncTimer=setTimeout(applyOrdersChange,1500); return; }
+      renderPhQueue();
+    }
+  } else if(currentRole==='doctor'){
+    if($('pg-doc-drafts')?.classList.contains('active')) renderDocDrafts();
+  }
 }
 
 function renderPhQueue(){
@@ -4232,12 +4262,13 @@ function renderPhQueue(){
   const cdEl=document.getElementById('ph-confirmed-date');
   if(cdEl) cdEl.textContent=fmtTH(filterDate);
 
+  const _open=[...openCardIds(pel),...openCardIds(cel)];
   pel.innerHTML=pending.map((o,i)=>{
     const d0=o.days?.[0]||{};
     const c=calcTPN({...o,...d0});
     const osmColor=c.osm>(d0.route==='C'?1200:900)?'var(--rd)':c.osm>800?'var(--am)':'var(--gr)';
     return `<div class="order-card" style="border-left:3px solid var(--am)">
-      <div class="oc-hdr" onclick="toggleOC('pp-${i}',this)">
+      <div class="oc-hdr" onclick="toggleOC('pp-${o._sid}',this)">
         <span class="badge bam">⏳ รอตรวจ</span>${o.lateOrder?'<span class="badge brd" style="margin-left:4px" title="แพทย์ส่งหลังปิดรับรอบเตรียม">⚠️ ส่งหลังปิดรับ</span>':''}
         <div style="margin-left:8px;min-width:0">
           <div style="font-weight:600;font-size:17px">${o.name}${o.hn?' <span style="font-size:13px;color:var(--teal);font-family:var(--font-num);font-variant-numeric:tabular-nums">HN:'+o.hn+'</span>':''}</div>
@@ -4248,7 +4279,7 @@ function renderPhQueue(){
         <div style="margin-left:${(o.days||[]).some(d=>d.mode!=='lipidonly'&&volMismatch(d))?'8px':'auto'};font-size:14.5px;font-weight:600;color:${osmColor}">Osm ${fmt(c.osm,0)}</div>
         <span style="color:var(--tx3);margin-left:8px">›</span>
       </div>
-      <div class="oc-body" id="pp-${i}">
+      <div class="oc-body" id="pp-${o._sid}">
         ${o.note?`<div class="alert alert-warn" style="margin-bottom:8px">📝 ${o.note}</div>`:''}
         ${renderOrderDays(o,{editable:true})}
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--b);align-items:flex-end">
@@ -4272,7 +4303,7 @@ function renderPhQueue(){
     const c=calcTPN({...o,...d0});
     const osmColor=c.osm>(d0.route==='C'?1200:900)?'var(--rd)':c.osm>800?'var(--am)':'var(--gr)';
     return `<div class="order-card" style="border-left:3px solid var(--gr)">
-      <div class="oc-hdr" onclick="toggleOC('cp-${i}',this)">
+      <div class="oc-hdr" onclick="toggleOC('cp-${o._sid}',this)">
         <span class="badge bgr">✅</span>
         <span style="font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:14.5px;color:var(--teal);background:var(--teal-lt);padding:2px 6px;border-radius:4px;margin-left:6px">${o.pnid||'—'}</span>
         <div style="margin-left:8px;min-width:0">
@@ -4282,7 +4313,7 @@ function renderPhQueue(){
         <div style="margin-left:auto;font-size:14.5px;font-weight:600;color:${osmColor}">Osm ${fmt(c.osm,0)}</div>
         <span style="color:var(--tx3);margin-left:8px">›</span>
       </div>
-      <div class="oc-body" id="cp-${i}">
+      <div class="oc-body" id="cp-${o._sid}">
         ${o.preparedAt?`<div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:15px;color:#047857">✓ เตรียมเสร็จแล้ว โดย ${o.preparedBy||'เภสัชกร'} — รอแพทย์ Off PN เพื่อปิด Case</div>`:''}
         ${renderOrderDays(o,{editable:true})}
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--b)">
@@ -4297,6 +4328,7 @@ function renderPhQueue(){
       </div>
     </div>`;
   }).join('');
+  reopenCards(_open);
 }
 
 function markAllDoneByDate(){
@@ -4351,8 +4383,7 @@ async function quietMarkDone(sid){
   if(idx>=0){
     list[idx].preparedAt=new Date().toISOString();
     list[idx].preparedBy=getSession()?.displayName||'เภสัชกร';
-    saveOrders(list);
-    if(window._fbSaveOrder) await window._fbSaveOrder(list[idx]).catch(console.error);
+    await saveOneOrder(list[idx]);
   }
   const phIdx=phOrders.findIndex(x=>x._sid===sid);
   if(phIdx>=0){ phOrders[phIdx].preparedAt=new Date().toISOString(); }
@@ -4597,7 +4628,7 @@ async function saveOutcome(sid){
 function unconfirmOrder(sid){
   if(!confirm('ยกเลิก Confirm order นี้?')) return;
   const list=loadOrders(), idx=list.findIndex(o=>o._sid===sid);
-  if(idx>=0){list[idx].status='submitted'; delete list[idx].confirmedAt; saveOrders(list);}
+  if(idx>=0){list[idx].status='submitted'; delete list[idx].confirmedAt; saveOneOrder(list[idx]);}
   const po=phOrders.find(o=>o._sid===sid);
   if(po){po.status='submitted'; delete po.confirmedAt;}
   renderPhQueue(); renderPrepBatch();
@@ -4664,7 +4695,22 @@ function toggleOC(id,hdr){
   const body=document.getElementById(id); if(!body) return;
   const open=body.classList.toggle('open');
   if(hdr) hdr.classList.toggle('open', open);
-  const arr=hdr?.querySelector('span:last-child'); if(arr) arr.textContent=open?'⌄':'›';
+  setOCArrow(hdr, open);
+}
+// ลูกศรต้องเป็น span ลูกโดยตรงของ header เท่านั้น (เดิม 'span:last-child' ไปเจอ span HN ในชื่อผู้ป่วยก่อน → HN ถูกแทนด้วย ⌄)
+function setOCArrow(hdr, open){
+  const arr=hdr?.querySelector(':scope > span:last-child'); if(arr) arr.textContent=open?'⌄':'›';
+}
+function openCardIds(container){
+  return container?[...container.querySelectorAll('.oc-body.open')].map(b=>b.id):[];
+}
+function reopenCards(ids){
+  ids.forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.classList.add('open');
+    const h=b.previousElementSibling;
+    if(h&&h.classList.contains('oc-hdr')){ h.classList.add('open'); setOCArrow(h,true); }
+  });
 }
 // Cl ไม่ใช่สารที่เติมแยก — มาจาก NaCl (17.6%/3%) และ/หรือ KCl ตาม source ที่เลือก
 function clBreakdown(c,o,day){
@@ -4821,12 +4867,7 @@ function renderWF(){
   const rangeLabel=rangeFrom===rangeTo?fmtTH(rangeFrom):`${fmtTH(rangeFrom)} – ${fmtTH(rangeTo)}`;
 
   // โหลด orders ถ้ายังไม่มี
-  if(!phOrders.length){
-    const list=loadOrders();
-    phOrders=list
-      .filter(o=>(o.status==='submitted'||o.status==='confirmed')&&o.status!=='rejected')
-      .map(o=>({...o,pnid:o.pnid||'',prepDate:o.prepDate||today()}));
-  }
+  if(!phOrders.length) phOrders=buildPhOrders();
 
   // กรอง: confirmed + วันที่ wantDate ของ day อยู่ในช่วงที่เลือก
   const confirmed=phOrders.filter(o=>{
@@ -5916,7 +5957,7 @@ function showDrugInfo(){
         ${drRow('Na','3–5','2–3','mEq/kg/day')}
         ${drRow('K','1–5<br><span style="font-size:12.5px">ขึ้นกับ BW/phase</span>','1.5–3','mEq/kg/day')}
         ${drRow('Cl','3–5','2–3','mEq/kg/day')}
-        ${drRow('Ca','1.6–3.5 mmol<br><span style="font-size:12.5px;font-style:italic">(3.2–7 mEq)</span>','0.8–1.5 mmol<br><span style="font-size:12.5px;font-style:italic">(1.6–3 mEq)</span>','/kg/day — ระบบสั่ง Ca เป็น mEq<br><span style="color:#b45309">}
+        ${drRow('Ca','1.6–3.5 mmol<br><span style="font-size:12.5px;font-style:italic">(3.2–7 mEq)</span>','0.8–1.5 mmol<br><span style="font-size:12.5px;font-style:italic">(1.6–3 mEq)</span>','/kg/day — ระบบสั่ง Ca เป็น mEq<br><span style="color:#b45309">⚠ ระบบยังใช้เกณฑ์เดิม 1–1.5 / 0.5–1 mEq/kg/day รอพิจารณาร่วมกับทีมกุมารแพทย์</span>')}
         ${drRow('P','1.6–3.5','0.7–1.3','mmol/kg/day')}
         ${drRow('Mg','0.2–0.3 mmol<br><span style="font-size:12.5px;font-style:italic">(0.4–0.6 mEq)</span>','0.1–0.2 mmol<br><span style="font-size:12.5px;font-style:italic">(0.2–0.4 mEq)</span>','/kg/day — ระบบสั่ง Mg เป็น mEq')}
       </tbody>
@@ -6445,7 +6486,7 @@ function recTableHtml(c,o,day){
   const stwCell=c.stw<0?`<span style="color:red;font-weight:700">-${fmt(Math.abs(c.stw),2)}</span>`:c.stw===0?'-':fmt(c.stw,2);
   return `<table class="prec-tbl">
     <colgroup><col style="width:27%"><col style="width:16%"><col style="width:13%"><col style="width:13%"><col style="width:12%"><col style="width:19%"></colgroup>
-    <thead><tr><th>สารเคมี</th><th>Doctor order</th><th>ปริมาณ (แพทย์)<br><span style="font-weight:400;font-size:.85em">ต่อ Vol. PN/day ${fmt(day.volD,1)} mL</span></th><th>ปริมาณ (เตรียม)<br><span style="font-weight:400;font-size:.85em">ต่อขวด ${day.volP} mL</span></th><th>ปริมาตร (mL)</th><th>Lot No.</th></tr></thead>
+    <thead><tr><th>สารเคมี</th><th>Doctor order</th><th>ปริมาณ (แพทย์สั่ง)<br><span style="font-weight:400;font-size:.85em">ต่อ Vol. PN/day ${fmt(day.volD,1)} mL</span></th><th>ปริมาณ (เตรียม)<br><span style="font-weight:400;font-size:.85em">ต่อขวด ${day.volP} mL</span></th><th>ปริมาตร (mL)</th><th>Lot No.</th></tr></thead>
     <tbody>
       ${row('Dextrose 50%',(day.glcPct||0)+'%',fmt(c.glcGB/r,2)+' g',fmt(c.glcGB,2)+' g',fmt(c.glcVol,2))}
       ${row('Amino Acid 10%',dispDose(o,day,'aa','g'),fmt(c.aaGB/r,2)+' g',fmt(c.aaGB,2)+' g',fmt(c.aaVol,2))}
