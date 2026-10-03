@@ -723,7 +723,7 @@ document.addEventListener('DOMContentLoaded', initFB);
             <input type="number" id="if-vold" step="0.1" min="1" placeholder="หรือกรอกที่นี่" oninput="this.dataset.auto='';onVoldInput()">
             <span id="vold-state" style="font-size:14px;min-height:16px"></span>
           </div>
-          <div class="field"><label>Vol. เตรียม/ขวด (เภสัชกรกำหนด)</label>
+          <div class="field"><label>Vol. เตรียม/ขวด (เผื่อค้างสาย)</label>
             <div id="volb-info" style="height:38px;display:flex;align-items:center;padding:0 10px;background:var(--s2);border:1px dashed var(--b2);border-radius:6px;color:var(--tx2)">—</div>
             <div style="position:relative;display:none">
               <input type="number" id="if-volb" step="1" min="1" style="background:#e8f0fc;color:var(--ac);font-weight:600;font-family:var(--font-num);font-variant-numeric:tabular-nums;border-color:#b8d0f7" oninput="runValidation();autoDraft()">
@@ -733,7 +733,7 @@ document.addEventListener('DOMContentLoaded', initFB);
         </div>
         <div style="margin-top:10px;padding:9px 12px;background:#f0f6ff;border:1px dashed #9db9e8;border-radius:6px;font-size:14.5px;color:#1a3a6e;line-height:1.7">
           💡 <strong>กรอก PN Rate หรือ Vol. PN/day ช่องใดช่องหนึ่งก็ได้</strong> — ระบบจะคำนวณอีกช่องให้อัตโนมัติ (Vol. PN/day = Rate × 24)<br>
-          <span style="font-size:13.5px">ปัดเลขกลมได้ เช่น Rate 5.8 → 139.2 แก้เป็น 140 ได้ (ต่างไม่เกิน 2%) · เภสัชกรจะคำนวณปริมาตรเตรียมเผื่อค้างสายเอง</span>
+          <span style="font-size:13.5px">ปัดเลขกลมได้ เช่น Rate 5.8 → 139.2 แก้เป็น 140 ได้ (ต่างไม่เกิน 2%) · เภสัชจะคำนวณปริมาตรเตรียมเผื่อค้างสายเพิ่ม </span>
         </div>
         <div id="vol-hint" style="display:none;margin-top:8px;padding:8px 12px;background:var(--ac-lt);border:1px solid #b8d0f7;border-radius:6px;font-size:14.5px;color:var(--ac)"></div>
       </div>
@@ -2668,7 +2668,7 @@ function checkCutoff(){
     el.className='alert alert-warn';
     el.innerHTML=`<span style="font-size:19px">🕐</span><div>
       <strong>ขณะนี้ไม่มีรอบเตรียมที่เปิดรับ PN ${gap.length?'วัน '+gap.map(fmtDay).join(', '):'วันนี้'}</strong> (ขณะนี้ ${timeStr} น.)<br>
-      <span style="font-size:15px">ถ้าจำเป็นต้องให้ PN วันดังกล่าว กรุณา<strong>ติดต่อเภสัชกรโดยตรง</strong> — ระบบรับ Order ได้ตั้งแต่ <strong>PN ${fmtDay(open)}</strong> (รอบเตรียม ${fmtDay(open)} ปิดรับ ${PREP_CUTOFF_H}:00 น.)${moved?' — ระบบปรับวัน PN ให้แล้ว':''}</span>
+      <span style="font-size:15px">ระบบรับ Order ได้ตั้งแต่ <strong>PN ${fmtDay(open)}</strong> (รอบเตรียม ${fmtDay(open)} ปิดรับ ${PREP_CUTOFF_H}:00 น.)${moved?' — ระบบปรับวัน PN ให้แล้ว':''}</span>
     </div>`;
   }
 }
